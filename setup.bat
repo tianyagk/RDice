@@ -27,5 +27,3 @@ if not exist "%VENV_ACTIVATE%" (
 :: 启动 Bot
 echo Launching NoneBot2 ...
 python bot.py
-
-pause
