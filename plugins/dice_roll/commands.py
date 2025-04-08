@@ -2,9 +2,8 @@ from nonebot.plugin import on_command, get_plugin_config
 from nonebot.rule import to_me, Rule
 from nonebot.params import CommandArg, ArgPlainText
 from nonebot.matcher import Matcher
-from nonebot.adapters.console import MessageEvent, Message
-
-# from nonebot.adapters.onebot.v11 import MessageEvent, Message
+# from nonebot.adapters.console import MessageEvent, Message
+from nonebot.adapters.onebot.v11 import MessageEvent, Message
 # from nonebot.adapters.onebot.v11.helpers import extract_numbers
 
 from .config import Config
