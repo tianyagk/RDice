@@ -25,7 +25,7 @@ async def load_character(
         char = await storage.load_character(user_id, char_name)
         await matcher.send(
             f"角色加载成功！\n"
-            f"姓名：{char.name}\n"
+            f"姓名：{char.name} | {char.player_id}\n"
             f"职业：{char.occupation}\n"
             f"HP: {char.HP} MP: {char.MP} SAN: {char.SAN}"
         )
