@@ -1,6 +1,6 @@
 from nonebot.plugin import PluginMetadata
 
-# from .commands import *
+from .commands import *
 
 __plugin_meta__ = PluginMetadata(
     name="COC角色管理器",
