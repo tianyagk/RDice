@@ -1,5 +1,5 @@
 from nonebot.plugin import on_command
-from nonebot.params import CommandArg, ArgPlainText, EventPlainText
+from nonebot.params import CommandArg
 from nonebot.adapters.onebot.v11 import MessageEvent, Message
 from nonebot.matcher import Matcher
 

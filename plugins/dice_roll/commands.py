@@ -2,9 +2,12 @@ from nonebot.plugin import on_command, get_plugin_config
 from nonebot.rule import to_me, Rule
 from nonebot.params import CommandArg, ArgPlainText
 from nonebot.matcher import Matcher
-# from nonebot.adapters.console import MessageEvent, Message
 from nonebot.adapters.onebot.v11 import MessageEvent, Message
-# from nonebot.adapters.onebot.v11.helpers import extract_numbers
+
+from nonebot import require
+
+require("coc_charloader")
+from coc_charloader.storage import storage  # type: ignore
 
 from .config import Config
 from .handler import *
@@ -44,30 +47,54 @@ check_cmd = on_command(
 
 
 @check_cmd.handle()
-async def _(event: MessageEvent, arg: Message = CommandArg()):
-    await skill_check(event, check_cmd, arg.extract_plain_text())
-
-
-async def skill_check(
-    event: MessageEvent, matcher: Matcher, skill_name: str = ArgPlainText()
+async def handle_check(
+    event: MessageEvent, matcher: Matcher, arg: Message = CommandArg()
 ):
     """处理 .ra 技能名 指令"""
-    # 这里应该连接角色卡系统获取技能值
-    # 示例中使用固定值演示
-    if "侦查" in skill_name:
-        skill_value = 60
-    elif "图书馆" in skill_name:
-        skill_value = 70
-    else:
-        await matcher.finish(f"找不到技能：{skill_name}")
+    user_id = event.get_user_id()
+    skill_name = arg.extract_plain_text().strip()
 
+    if not skill_name:
+        await check_cmd.finish("请指定检定技能，例如: .ra 侦查")
+
+    # 获取用户当前角色
+    investigator = await storage.get_character(user_id)
+
+    if not investigator:
+        # 如果没有角色数据，使用默认值
+        default_values = {  # 可以挪到constants.py中
+            "侦查": 25,
+            "闪避": 20,
+            "说服": 15,
+            "图书馆": 20,
+        }
+
+        skill_value = default_values.get(skill_name, 50)  # 默认50
+        char_info = "(未加载角色，使用默认值)"
+    else:
+        # 有角色数据，从角色卡获取技能值
+        skill_value = investigator.skills.get(skill_name, 0)
+        char_info = f"角色:{investigator.name}({investigator.occupation})"
+
+    # 进行检定
     success, grade, roll = DiceRoller.coc_check(skill_value)
 
-    await matcher.finish(f"[{grade}] {skill_name}检定\n" f"D100={roll}/{skill_value}")
+    # 构建结果消息
+    result = (
+        f"{char_info}\n" f"[{grade}] {skill_name}检定\n" f"D100={roll}/{skill_value}"
+    )
+
+    # 特殊结果处理 - 大成功/大失败
+    if grade == "大成功":
+        result += "\n✨ 真是惊人的好运！"
+    elif grade == "大失败":
+        result += "\n💥 哦不，情况变得更糟了！"
+
+    await check_cmd.finish(result)
 
 
 # 理智检定
-san_cmd = on_command(
+san_check_cmd = on_command(
     "sc",
     aliases={"san", "理智检定"},
     priority=5,
@@ -76,11 +103,13 @@ san_cmd = on_command(
 )
 
 
-@san_cmd.handle()
-async def _(event: MessageEvent, arg: Message = CommandArg()):
+@san_check_cmd.handle()
+async def handle_san_check(event: MessageEvent, arg: Message = CommandArg()):
     args = arg.extract_plain_text().split(" ")
     if len(args) != 2:
-        await san_cmd.finish("格式错误，正确格式：.sc 成功扣除/失败扣除 当前理智 (如 .sc 1/1d6 60)")
+        await san_check_cmd.finish(
+            "格式错误，正确格式：.sc 成功扣除/失败扣除 当前理智 (如 .sc 1/1d6 60)"
+        )
 
     try:
         # 模拟当前SAN值
@@ -95,8 +124,8 @@ async def _(event: MessageEvent, arg: Message = CommandArg()):
             result = f"理智检定失败！SAN值减少 {loss}"
 
         new_san = max(0, current_san - int(loss))
-        await san_cmd.finish(
+        await san_check_cmd.finish(
             f"SAN检定：D100={roll}/{current_san}\n" f"{result} (当前SAN：{new_san})"
         )
     except DiceError as e:
-        await san_cmd.finish(f"理智检定错误：{e}")
+        await san_check_cmd.finish(f"理智检定错误：{e}")
