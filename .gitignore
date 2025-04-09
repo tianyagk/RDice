@@ -10,6 +10,7 @@ __pycache__/
 
 # pandas.DataFrame files
 *.csv
+*.json
 
 # # C extensions
 # *.so
