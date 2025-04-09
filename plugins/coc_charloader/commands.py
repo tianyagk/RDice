@@ -2,7 +2,6 @@ from nonebot.plugin import on_command
 from nonebot.params import CommandArg, ArgPlainText, EventPlainText
 from nonebot.adapters.onebot.v11 import MessageEvent, Message
 from nonebot.matcher import Matcher
-from nonebot.typing import T_State
 
 from .handler import storage
 from .model import Investigator
