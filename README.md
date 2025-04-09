@@ -17,7 +17,7 @@ RDice/
 │   └── coc_chargen/        # CoC角色创建插件
 │   │   ├── __init__.py
 │   │   └── handlers.py
-│   └── coc_charimporter/   # 导入预设角色数据插件
+│   └── coc_charloader/     # 导入预设角色数据插件
 │   │   ├── __init__.py
 │   │   ├── templates/      # 存放预设模板
 │   │   │   ├── char1.json
@@ -58,5 +58,5 @@ SAN检定：D100=72/60
 - [x] 基本检定
 - [ ] 创建CoC角色
 - [ ] 导入预设角色/怪物数据库 (NoSQL)
-    - [ ] 切换身份进行检定
+    - [ ] 载入角色数据并进行检定
 - [ ] 跑团日志解析

@@ -13,5 +13,8 @@ __plugin_meta__ = PluginMetadata(
     ],
     type="application",
     homepage="https://your-bot-website.com",
-    extra={"author": "YourName"},
+    extra={
+        "author": "Aeoluze",
+        "version": "0.1.0",
+    },
 )
