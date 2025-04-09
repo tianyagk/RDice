@@ -7,7 +7,7 @@ from nonebot.adapters.onebot.v11 import MessageEvent, Message
 from nonebot import require
 
 require("coc_charloader")
-from coc_charloader.storage import storage  # type: ignore
+from plugins.coc_charloader.storage import storage  # type: ignore
 
 from .config import Config
 from .handler import *
