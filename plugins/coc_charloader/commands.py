@@ -17,13 +17,13 @@ async def load_character(
 ):
     char_name = arg.extract_plain_text().strip()
     if not char_name:
-        await matcher.finish("请指定角色名称，例如：.load 张三")
+        await matcher.send("请指定角色名称，例如：.load 张三")
 
     user_id = event.get_user_id()
 
     try:
         char = await storage.load_character(user_id, char_name)
-        await matcher.finish(
+        await matcher.send(
             f"角色加载成功！\n"
             f"姓名：{char.name}\n"
             f"职业：{char.occupation}\n"
@@ -47,7 +47,7 @@ async def save_character(
             await matcher.finish("你还没有加载任何角色")
 
         saved_name = await storage.save_character(user_id, new_name)
-        await matcher.finish(f"角色已保存为：{saved_name}")
+        await matcher.send(f"角色已保存为：{saved_name}")
     except Exception as e:
         await matcher.finish(f"保存失败：{str(e)}")
 
@@ -62,6 +62,6 @@ async def list_characters(matcher: Matcher):
         msg = "可用角色列表：\n" + "\n".join(
             f"{i+1}. {name}" for i, name in enumerate(chars)
         )
-        await matcher.finish(msg)
+        await matcher.send(msg)
     except Exception as e:
         await matcher.finish(f"获取角色列表失败：{str(e)}")
