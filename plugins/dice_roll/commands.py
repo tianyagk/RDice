@@ -61,16 +61,7 @@ async def handle_check(
     investigator = await storage.get_character(user_id)
 
     if not investigator:
-        # 如果没有角色数据，使用默认值
-        default_values = {  # 可以挪到constants.py中
-            "侦查": 25,
-            "闪避": 20,
-            "说服": 15,
-            "图书馆": 20,
-        }
-
-        skill_value = default_values.get(skill_name, 50)  # 默认50
-        char_info = "(未加载角色，使用默认值)"
+        check_cmd.finish("角色未载入，无法基于角色数据进行检定")
     else:
         # 有角色数据，从角色卡获取技能值
         skill_value = investigator.skills.get(skill_name, 0)
@@ -105,25 +96,35 @@ san_check_cmd = on_command(
 
 @san_check_cmd.handle()
 async def handle_san_check(event: MessageEvent, arg: Message = CommandArg()):
-    args = arg.extract_plain_text().split(" ")
-    if len(args) != 2:
+    args = arg.extract_plain_text()
+    if "/" not in args:
         await san_check_cmd.finish(
-            "格式错误，正确格式：.sc 成功扣除/失败扣除 当前理智 (如 .sc 1/1d6 60)"
+            "格式错误，正确格式：.sc 成功扣除/失败扣除 (如 .sc 1/1d6)"
         )
+
+    user_id = event.get_user_id()
+    # 获取用户当前角色
+    investigator = await storage.get_character(user_id)
+
+    if not investigator:
+        check_cmd.finish("角色未载入，无法基于角色数据进行检定")
 
     try:
         # 模拟当前SAN值
-        current_san = int(args[-1]) or 100
+        current_san = investigator.current_san
         success, _, roll = DiceRoller.coc_check(current_san)
 
         if success:
-            loss = args[0].split("/")[0]
+            loss = args.split("/")[0]
+            if "d" in loss:
+                loss = DiceRoller.roll(loss)[0]
             result = f"理智检定通过，SAN值减少 {loss}"
         else:
-            loss = DiceRoller.roll(args[0].split("/")[1])[0]
+            loss = DiceRoller.roll(args.split("/")[1])[0]
             result = f"理智检定失败！SAN值减少 {loss}"
 
         new_san = max(0, current_san - int(loss))
+        investigator.current_san = new_san
         await san_check_cmd.finish(
             f"SAN检定：D100={roll}/{current_san}\n" f"{result} (当前SAN：{new_san})"
         )

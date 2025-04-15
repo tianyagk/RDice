@@ -23,6 +23,10 @@ class Investigator(BaseModel):
     INT: int = Field(50, ge=15, le=90)
     EDU: int = Field(50, ge=15, le=90)
 
+    current_hp: int = Field(0, ge=0)
+    current_mp: int = Field(0, ge=0)
+    current_san: int = Field(0, ge=0)
+
     # 衍生属性
     @property
     def HP(self) -> int:
