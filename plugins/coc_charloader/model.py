@@ -14,18 +14,25 @@ class Investigator(BaseModel):
     occupation: str = Field("无业", description="职业")
 
     # 核心属性
-    STR: int = Field(50, ge=15, le=90)
-    CON: int = Field(50, ge=15, le=90)
-    DEX: int = Field(50, ge=15, le=90)
-    APP: int = Field(50, ge=15, le=90)
-    POW: int = Field(50, ge=15, le=90)
-    SIZ: int = Field(50, ge=15, le=90)
-    INT: int = Field(50, ge=15, le=90)
-    EDU: int = Field(50, ge=15, le=90)
-
+    STR: int = Field(50, ge=1, le=99, description="力量")
+    CON: int = Field(50, ge=1, le=99, description="体质")
+    DEX: int = Field(50, ge=1, le=99, description="敏捷")
+    APP: int = Field(50, ge=1, le=99, description="外貌")
+    POW: int = Field(50, ge=1, le=99, description="意志")
+    SIZ: int = Field(50, ge=1, le=99, description="体格")
+    INT: int = Field(50, ge=1, le=99, description="智力")
+    EDU: int = Field(50, ge=1, le=99, description="教育")
+    
+    # 额外属性
+    LUCK: int = Field(50, ge=1, le=99, description="幸运")
+    MOV: int = Field(8, ge=1, le=99, description="移动")
+    CREDIT_RATING: int = Field(0, ge=0, le=99, description="信用评级")
+    
+    # 当前状态
     current_hp: int = Field(0, ge=0)
     current_mp: int = Field(0, ge=0)
     current_san: int = Field(0, ge=0)
+    current_luck: int = Field(0, ge=0)
 
     # 衍生属性
     @property
@@ -40,22 +47,88 @@ class Investigator(BaseModel):
     def SAN(self) -> int:
         return self.POW
 
+    @property
+    def BUILD(self) -> int:
+        """体格构建值"""
+        if self.STR + self.SIZ < 65:
+            return -2
+        elif self.STR + self.SIZ < 85:
+            return -1
+        elif self.STR + self.SIZ < 125:
+            return 0
+        elif self.STR + self.SIZ < 165:
+            return 1
+        else:
+            return 2
+
+    @property
+    def DB(self) -> str:
+        """伤害奖励"""
+        build = self.BUILD
+        if build == -2:
+            return "-2"
+        elif build == -1:
+            return "-1"
+        elif build == 0:
+            return "+0"
+        elif build == 1:
+            return "+1d4"
+        else:
+            return "+1d6"
+
     # 技能系统
     skills: Dict[str, int] = Field(
-        default_factory=lambda: {"侦查": 25, "图书馆": 20, "闪避": 10},
+        default_factory=dict,
         description="技能名称与数值的映射",
+    )
+    
+    combat_skills: Dict[str, int] = Field(
+        default_factory=dict,
+        description="战斗技能名称与数值的映射",
+    )
+    
+    language_skills: Dict[str, int] = Field(
+        default_factory=dict,
+        description="语言技能名称与数值的映射",
     )
 
     # 背景故事
     background: Optional[str] = None
     personal_desc: Optional[str] = None
+    belongings: Optional[str] = None  # 随身物品
+    weapons: Optional[str] = None    # 武器信息
+    backstory: Optional[str] = None  # 背景故事详情
 
     # 模型验证
-    @validator("skills")
+    @validator("skills", "combat_skills", "language_skills")
     def validate_skills(cls, v):
         for skill, value in v.items():
             if value < 0 or value > 100:
                 raise ValueError(f"技能 {skill} 值超出范围(0-100)")
+        return v
+    
+    @validator("current_hp", pre=True, always=True)
+    def set_hp_default(cls, v, values):
+        if v == 0 and "CON" in values and "SIZ" in values:
+            return (values["CON"] + values["SIZ"]) // 10
+        return v
+    
+    @validator("current_mp", pre=True, always=True)
+    def set_mp_default(cls, v, values):
+        if v == 0 and "POW" in values:
+            return values["POW"] // 5
+        return v
+    
+    @validator("current_san", pre=True, always=True)
+    def set_san_default(cls, v, values):
+        if v == 0 and "POW" in values:
+            return values["POW"]
+        return v
+    
+    @validator("current_luck", pre=True, always=True)
+    def set_luck_default(cls, v, values):
+        if v == 0 and "LUCK" in values:
+            return values["LUCK"]
         return v
 
 
